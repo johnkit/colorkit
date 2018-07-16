@@ -1,0 +1,13 @@
+{
+  "name": "colorkit",
+  "version": "1.0.0",
+  "description": "A minimal colormap capability",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "homepage": "https://github.com/johnkit/colorkit",
+  "author": "",
+  "license": "ISC"
+}
