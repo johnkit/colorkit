@@ -1,9 +1,13 @@
 {
   "name": "colorkit",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "A minimal colormap capability",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/johnkit/colorkit"
+  },
   "scripts": {
     "build": "node tools/build.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -12,14 +16,9 @@
   "homepage": "https://github.com/johnkit/colorkit",
   "author": "",
   "license": "ISC",
-  "babel": {
-    "presets": [
-      "latest"
-    ]
-  },
   "devDependencies": {
     "babel-core": "^6.26.3",
-    "babel-preset-latest": "^6.24.1",
+    "babel-preset-env": "^1.7.0",
     "del": "^3.0.0",
     "rollup": "^0.62.0",
     "rollup-plugin-babel": "^3.0.7"
