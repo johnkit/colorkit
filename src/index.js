@@ -36,6 +36,7 @@ class ColorMap {
     this.x_range = range;
   }
 
+  // Select color series by name
   useColorSeries(name) {
     if (!(name in ColorSeriesTable)) {
       throw Error(`Unrecognized colormap name ${name}`);
@@ -45,6 +46,13 @@ class ColorMap {
     console.log(`Using color series ${name}`);
   }
 
+  // Color series defined as:
+  //  * Array of [x, [r, g, b]] values
+  //  * x[0] must be 0.0
+  //  * x[last] must be 1.0
+  //  * x values must increase monotonically from 0.0 to 1.0
+  //  * rgb values must all be in range [0.0, 1.0]
+  // Note: This method does NOT validate the input data
   inputColorSeries(values) {
     // Split values into four lists
     this.x_values = [];
@@ -67,46 +75,58 @@ class ColorMap {
     }
 
     // Scale input value
-    let scaled = (val - this.x_range[0]) / (this.x_range[1] - this.x_range[0]);
-    let x = this.enforceBounds(scaled);
+    const x = (val - this.x_range[0]) / (this.x_range[1] - this.x_range[0]);
+    //console.debug(`x: ${x}`);
 
-    // Traverse values brute force
-    let i = 1;
-    while (this.x_values[i] < x) {
-        i = i+1;
+    // Check min/max edge cases
+    if (x <= 0.0) {
+      return this.lookupColor(0, format);
     }
-    i = i-1;
 
-    let width = Math.abs(this.x_values[i] - this.x_values[i+1]);
-    let scaling_factor = (x - this.x_values[i]) / width;
+    const iMax = this.x_values.length - 1;
+    if (x >= 1.0) {
+      return this.lookupColor(iMax, format);
+    }
+
+    // Find nearest values in the color series
+    // Use linear estimate to get a starting value
+    // Find first color below x
+    let iLo = Math.ceil(x * iMax);
+    //console.log(`Starting x ${x}, length ${this.x_values.length}, iLo ${iLo}`);
+    while ((this.x_values[iLo]) > x && (iLo > 0)) {
+        iLo--;
+    }
+    //console.debug(`iLo: ${iLo}`);
+
+    // Find first color above x
+    let iHi = iLo;
+    while ((this.x_values[iHi] < x) && (iHi < iMax)) {
+        iHi++;
+    }
+    //console.debug(`iHi: ${iHi}`);
+
+    // If match is dead nuts...
+    if (iLo === iHi) {
+      return this.lookupColor(iLo, format);
+    }
+
+    // Check that iHi = iLo + 1
+    console.assert(iHi = iLo + 1);
 
     // Get the new color values though interpolation
-    let r = this.r_values[i] + scaling_factor * (this.r_values[i+1] - this.r_values[i]);
-    let g = this.g_values[i] + scaling_factor * (this.g_values[i+1] - this.g_values[i]);
-    let b = this.b_values[i] + scaling_factor * (this.b_values[i+1] - this.b_values[i]);
+    let colorLo = this.lookupColor(iLo, ColorFormat.DOUBLE);
+    let colorHi = this.lookupColor(iHi, ColorFormat.DOUBLE);
 
-    let doubleResult = [this.enforceBounds(r), this.enforceBounds(g), this.enforceBounds(b)];
+    let width = Math.abs(this.x_values[iHi] - this.x_values[iLo]);
+    let scaling_factor = (x - this.x_values[iLo]) / width;
+
+    const r = this.r_values[iLo] + scaling_factor * (this.r_values[iHi] - this.r_values[iLo]);
+    const g = this.g_values[iLo] + scaling_factor * (this.g_values[iHi] - this.g_values[iLo]);
+    const b = this.b_values[iLo] + scaling_factor * (this.b_values[iHi] - this.b_values[iLo]);
+
+    const doubleResult = [this.enforceBounds(r), this.enforceBounds(g), this.enforceBounds(b)];
     //console.log(`doubleResult ${doubleResult}`);
-    if (format == ColorFormat.DOUBLE) {
-      return doubleResult;
-    }
-
-    // Convert to rgb (0-255)
-    let rgbResult = doubleResult.map(val => Math.round(255.0 * val));
-    //console.log(`rgbResult ${rgbResult}`);
-    if (format == ColorFormat.RGB) {
-      return rgbResult;
-    }
-
-    if (format == ColorFormat.HEX) {
-      // Convert to hex string array
-      let hexResult = rgbResult.map(val => ('0' + val.toString(16)).slice(-2));
-      //console.log(`hexResult ${hexResult}`);
-      return '#' + hexResult.join('');
-    }
-
-    // (else) Some format we missed
-    throw Error(`Unrecognized ColorFormat ${format}`);
+    return this.formatColor(doubleResult, format);
   }  // interpolateColor()
 
   enforceBounds(x) {
@@ -118,6 +138,34 @@ class ColorMap {
           return x;
       }
   }  // enforceBounds()
+
+  lookupColor(i, format) {
+    let doubleVal = [this.r_values[i], this.g_values[i], this.b_values[i]];
+    return this.formatColor(doubleVal, format);
+  }
+
+  formatColor(doubleVal, format) {
+    if (format == ColorFormat.DOUBLE) {
+      return doubleVal;
+    }
+
+    // Convert to rgb (0-255)
+    let rgbVal = doubleVal.map(val => Math.round(255.0 * val));
+    //console.log(`rgbResult ${rgbResult}`);
+    if (format == ColorFormat.RGB) {
+      return rgbVal;
+    }
+
+    if (format == ColorFormat.HEX) {
+      // Convert to hex string array
+      let hexVal = rgbVal.map(val => ('0' + val.toString(16)).slice(-2));
+      //console.log(`hexResult ${hexResult}`);
+      return '#' + hexVal.join('');
+    }
+
+    // (else) Some format we missed
+    throw Error(`Unrecognized ColorFormat ${format}`);
+  }
 
 }  // Colormap
 
