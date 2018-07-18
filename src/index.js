@@ -29,7 +29,7 @@ class ColorMap {
   // Lists available colormaps
   static
   listColorSeries() {
-    return ColorSeriesTable.keys();
+    return Object.keys(ColorSeriesTable);
   }
 
   setInputRange(range) {
