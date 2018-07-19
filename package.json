@@ -1,6 +1,6 @@
 {
   "name": "colorkit",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "A minimal colormap capability",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
@@ -10,6 +10,7 @@
   },
   "scripts": {
     "build": "node tools/build.js",
+    "build:docs": "jsdoc -d ./docs/html src/index.js",
     "test": "mocha --require babel-core/register"
   },
   "keywords": [],
